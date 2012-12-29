@@ -128,7 +128,7 @@ namespace Cyotek.Windows.Forms
     }
 
     /// <summary>
-    /// Raises the <see cref="E:System.Windows.Forms.Control.SystemColorsChanged"/> event.
+    /// Raises the <see cref="System.Windows.Forms.Control.SystemColorsChanged"/> event.
     /// </summary>
     /// <param name="e">An <see cref="T:System.EventArgs"/> that contains the event data.</param>
     protected override void OnSystemColorsChanged(EventArgs e)
