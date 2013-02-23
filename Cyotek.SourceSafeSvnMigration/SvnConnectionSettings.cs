@@ -9,8 +9,6 @@ namespace Cyotek.SourceSafeSvnMigration
   {
   #region  Public Properties  
 
-    public string LocalFolderName { get; set; }
-
     public string Password { get; set; }
 
     public string RepositoryUri { get; set; }

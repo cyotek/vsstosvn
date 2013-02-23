@@ -92,17 +92,17 @@ namespace Cyotek.SourceSafeSvnMigration
     private void okButton_Click(object sender, EventArgs e)
     {
       // remove anything present but unchecked
-      for (int i = 0; i > this.MigrationSettings.SourceSafeProjects.Count; i--)
-      {
-        string spec;
-        TreeNode[] nodes;
+		for (int i = this.MigrationSettings.SourceSafeProjects.Count; i > 0;  i--)
+		{
+			string spec;
+			TreeNode[] nodes;
 
-        spec = this.MigrationSettings.SourceSafeProjects[i - 1];
-        nodes = projectsTreeView.Nodes.Find(spec, true);
+			spec = this.MigrationSettings.SourceSafeProjects[i - 1];
+			nodes = projectsTreeView.Nodes.Find(spec, true);
 
-        if (nodes != null && nodes.Length != 0 && !nodes[0].Checked)
-          this.MigrationSettings.SourceSafeProjects.RemoveAt(i - 1);
-      }
+			if (nodes != null && nodes.Length != 0 && !nodes[0].Checked)
+				this.MigrationSettings.SourceSafeProjects.RemoveAt(i - 1);
+		}
 
       // now add anything that's checked
       foreach (TreeNode node in projectsTreeView.Nodes)

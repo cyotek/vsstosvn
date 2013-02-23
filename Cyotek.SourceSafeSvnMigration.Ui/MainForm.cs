@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Media;
 using System.Windows.Forms;
+using System.IO;
+
+using System.Runtime.InteropServices;
+
+
 
 namespace Cyotek.SourceSafeSvnMigration
 {
@@ -34,27 +39,38 @@ namespace Cyotek.SourceSafeSvnMigration
       {
         // don't allow shutdown if the migration is in progress
         SystemSounds.Beep.Play();
-        e.Cancel = true;
-      }
+		e.Cancel = true;
+	  }
+	  else
+	  {
+		  save_app_settings();
+	  }
 
       base.OnFormClosing(e);
     }
 
     protected override void OnShown(EventArgs e)
     {
-      base.OnShown(e);
+		base.OnShown(e);
 
-      _migration = VssMigration.LoadFromCommandLine();
-      this.BindEvents();
-      this.RefreshMigrationSettings();
+		//disable theming for progress bar otherwise it's not displaying progress properly (1 bar behind)
+		SetWindowTheme(progressBar.Handle, "", "");
 
-      if (_migration.AutoMigrate)
-        migrateButton.PerformClick();
+		statusLabel.Text = string.Empty;
+
+		_migration = new VssMigration();
+		load_app_settings();
+
+		if (_migration.AutoMigrate)
+			migrateButton.PerformClick();
     }
 
     #endregion  Protected Overridden Methods
 
-    #region  Event Handlers
+     [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
+    private extern static int SetWindowTheme(IntPtr hWnd, string pszSubAppName,
+                                            string pszSubIdList);
+   #region  Event Handlers
 
     void _migration_Log(object sender, LogEventArgs e)
     {
@@ -69,7 +85,7 @@ namespace Cyotek.SourceSafeSvnMigration
 
     void _migration_ProgressChanged(object sender, ProgressEventArgs e)
     {
-      progressBar.Value = e.PercentComplete;
+      progressBar.Value = (int)(0.5 + e.PercentComplete);
 
       if (!string.IsNullOrWhiteSpace(e.Status))
         statusLabel.Text = e.Status;
@@ -108,11 +124,6 @@ namespace Cyotek.SourceSafeSvnMigration
       Application.Exit();
     }
 
-    private void includeSubFoldersCheckBox_CheckedChanged(object sender, EventArgs e)
-    {
-      _migration.IncludeSubFolders = includeSubFoldersCheckBox.Checked;
-    }
-
     private void migrateButton_Click(object sender, EventArgs e)
     {
       this.RunAction(true);
@@ -126,11 +137,6 @@ namespace Cyotek.SourceSafeSvnMigration
     private void previewButton_Click(object sender, EventArgs e)
     {
       this.RunAction(false);
-    }
-
-    private void removeVssBindingsCheckBox_CheckedChanged(object sender, EventArgs e)
-    {
-      _migration.RemoveVssBindings = removeVssBindingsCheckBox.Checked;
     }
 
     private void saveSettingsAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -148,26 +154,9 @@ namespace Cyotek.SourceSafeSvnMigration
       _migration.RootSubversionProject = svnProjectTextBox.Text;
     }
 
-    private void svnRepositoryPathButton_Click(object sender, EventArgs e)
-    {
-      svnFolderBrowserDialog.SelectedPath = svnRepositoryPathTextBox.Text;
-      if (svnFolderBrowserDialog.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
-        svnRepositoryPathTextBox.Text = svnFolderBrowserDialog.SelectedPath;
-    }
-
-    private void svnRepositoryPathTextBox_TextChanged(object sender, EventArgs e)
-    {
-      _migration.SvnConnectionSettings.LocalFolderName = svnRepositoryPathTextBox.Text;
-    }
-
     private void svnRepositoryTextBox_TextChanged(object sender, EventArgs e)
     {
       _migration.SvnConnectionSettings.RepositoryUri = svnRepositoryTextBox.Text;
-    }
-
-    private void updateRevisionPropertiesCheckBox_CheckedChanged(object sender, EventArgs e)
-    {
-      _migration.UpdateRevisionProperties = updateRevisionPropertiesCheckBox.Checked;
     }
 
     private void vssProjectsBrowseButton_Click(object sender, EventArgs e)
@@ -224,7 +213,7 @@ namespace Cyotek.SourceSafeSvnMigration
         if (openSettingsFileDialog.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
           fileName = openSettingsFileDialog.FileName;
       }
-
+ 
       if (!string.IsNullOrEmpty(fileName))
       {
         try
@@ -248,12 +237,9 @@ namespace Cyotek.SourceSafeSvnMigration
       vssProjectsListBox.Items.Clear();
       foreach (string projectName in _migration.SourceSafeProjects)
         vssProjectsListBox.Items.Add(projectName);
-      includeSubFoldersCheckBox.Checked = _migration.IncludeSubFolders;
-      svnRepositoryTextBox.Text = _migration.SvnConnectionSettings.RepositoryUri != null ? _migration.SvnConnectionSettings.RepositoryUri.ToString() : string.Empty;
-      svnRepositoryPathTextBox.Text = _migration.SvnConnectionSettings.LocalFolderName;
+	  checkBoxNewName.Checked = _migration.NoSubfolderForSingleProj;
+	  svnRepositoryTextBox.Text = _migration.SvnConnectionSettings.RepositoryUri != null ? _migration.SvnConnectionSettings.RepositoryUri.ToString() : string.Empty;
       svnProjectTextBox.Text = _migration.RootSubversionProject;
-      updateRevisionPropertiesCheckBox.Checked = _migration.UpdateRevisionProperties;
-      removeVssBindingsCheckBox.Checked = _migration.RemoveVssBindings;
     }
 
     private void RunAction(bool isFullMigration)
@@ -267,7 +253,8 @@ namespace Cyotek.SourceSafeSvnMigration
         migrateButton.Enabled = false;
         previewButton.Enabled = false;
         logTextBox.Clear();
-        progressBar.Value = 0;
+		statusLabel.Text = string.Empty;
+		progressBar.Value = 0;
         progressBar.Show();
         this.UseWaitCursor = true;
         Cursor.Current = Cursors.WaitCursor;
@@ -276,9 +263,6 @@ namespace Cyotek.SourceSafeSvnMigration
 
         if (isFullMigration)
         {
-          if (_migration.RecreateRepository && MessageBox.Show("Warning: Using the RecreateRepository option will delete any existing repository and create a blank repository in its place. Are you sure you want to continue?", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == System.Windows.Forms.DialogResult.No)
-            throw new ApplicationException("Aborted");
-
           _migration.Migrate();
           MessageBox.Show("Successfully migrated SourceSafe database.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -332,5 +316,56 @@ namespace Cyotek.SourceSafeSvnMigration
     }
 
     #endregion  Private Methods
+
+ 	void load_app_settings()
+	{
+		string filename = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VssToSvnSettings.xml");
+		if (File.Exists(filename))
+		{
+			OpenSettingsFile(filename);
+		}
+	}
+
+	void save_app_settings()
+	{
+		SaveSettingFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "VssToSvnSettings.xml"));
+	}
+
+ 	private void checkBoxNewName_CheckedChanged(object sender, EventArgs e)
+	{
+		_migration.NoSubfolderForSingleProj = checkBoxNewName.Checked;
+	}
+
+	private void buttonCreateSVNFolder_Click(object sender, EventArgs e)
+	{
+		if (_migration.SvnConnectionSettings.RepositoryUri != null && _migration.RootSubversionProject!=null)
+		{
+			string str_uri = _migration.SvnConnectionSettings.RepositoryUri;
+			if (!str_uri.EndsWith("/"))
+				str_uri += "/";
+			Uri uri = new Uri(str_uri + _migration.RootSubversionProject);
+			DialogResult res = MessageBox.Show(string.Format("Create SVN folder \"{0}\" ?", uri), Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+			if (res != DialogResult.Yes)
+			{
+				return;
+			}
+		}
+		else
+		{
+			MessageBox.Show(string.Format("Please provide server name and project name first!"), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+		Cursor.Current = Cursors.WaitCursor;
+		try
+		{
+			string str_uri = _migration.CreateSVNfolder();
+			MessageBox.Show(string.Format("Successfully created {0}", str_uri), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+		}
+		catch (System.Exception ex)
+		{
+			MessageBox.Show(string.Format("Failed to create project folder!\n\n{0}", ex.Message), Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+		}
+		Cursor.Current = Cursors.Default;
+	}
   }
 }

@@ -32,11 +32,11 @@ namespace Cyotek.SourceSafeSvnMigration
       return result;
     }
 
-    public static string GetLocalPath(string path, IVSSItem vssFile)
+    public static string GetLocalPath(string path, IVSSItem vssFile, Int32 num_chars_to_chop_in_vss_path)
     {
-      string specPath;
+      string specPath = vssFile.Spec.Substring(num_chars_to_chop_in_vss_path);
 
-      specPath = vssFile.Spec.Substring(1).Replace("/", @"\");
+	  specPath = specPath.Replace("/", @"\");
       if (specPath.StartsWith(@"\"))
         specPath = specPath.Substring(1, specPath.Length - 1);
 

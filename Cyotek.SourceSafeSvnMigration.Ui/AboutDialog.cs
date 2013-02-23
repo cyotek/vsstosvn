@@ -43,6 +43,7 @@ namespace Cyotek.SourceSafeSvnMigration
       nameLabel.Text = title;
       versionLabel.Text = string.Format("Version {0}", info.ProductVersion);
       copyrightLabel.Text = info.LegalCopyright;
+	  copyrightLabel2.Text = "Copyright 2013, Damir Valiulin";
       webLinkLabel.Text = "http://cyotek.com/";
       webLinkLabel.Tag = webLinkLabel.Text;
 

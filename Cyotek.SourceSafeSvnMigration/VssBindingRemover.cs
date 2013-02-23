@@ -38,17 +38,25 @@ namespace Cyotek.SourceSafeSvnMigration
     /// </summary>
     /// <param name="filePath">Path to the file.</param>
     public static void RemoveBindings(string filePath)
-    {
-      if (Path.GetExtension(filePath).Contains("sln"))
-      {
-        PatchSolutionFile(filePath);
-      }
+	{
+		if (Path.GetExtension(filePath).Contains("sln"))
+		{
+			PatchSolutionFile(filePath);
+		}
 
-      if (Path.GetExtension(filePath).Contains("proj"))
-      {
-        PatchProjectFile(filePath);
-      }
-    }
+		if (Path.GetExtension(filePath).Contains("proj"))
+		{
+			Patch2003to2012ProjectFile(filePath);
+		}
+		if (Path.GetExtension(filePath).Contains("dsw"))
+		{
+			PatchVC6SolutionFile(filePath);
+		}
+		if (Path.GetExtension(filePath).Contains("dsp"))
+		{
+			PatchVC6ProjectFile(filePath);
+		}
+	}
 
   #endregion  Public Class Methods  
 
@@ -153,6 +161,137 @@ namespace Cyotek.SourceSafeSvnMigration
       return _vs2003ProjRegex.IsMatch(fileContents)
                  ? _vs2003ProjRegex.Replace(fileContents, string.Empty)
                  : _vs2005ProjRegex.Replace(fileContents, string.Empty);
+    }
+
+	private static bool is_scc_project_string(string cur_line)
+	{
+		return (cur_line.Contains("SccProjectName") 
+			|| cur_line.Contains("SccAuxPath") 
+			|| cur_line.Contains("SccLocalPath") 
+			|| cur_line.Contains("SccProvider") );
+	}
+
+	private static void Patch2003to2012ProjectFile(string fileName)
+	{
+		var tempFileName = Path.GetDirectoryName(fileName) + @"\old-scc-remove-" + Path.GetFileName(fileName);
+
+		try
+		{
+			File.Move(fileName, tempFileName);
+			RemoveReadOnlyOnFile(tempFileName);
+
+			// create a new file stripping away scc-related info
+			// DO NOT use File.Open for it may not open the file with the correct
+			// encoding.
+			var reader = new StreamReader(tempFileName, Encoding.Default);
+			var writer = new StreamWriter(fileName, false, Encoding.Default);
+			var currLine = reader.ReadLine();
+			while (currLine != null)
+			{
+				if (!is_scc_project_string(currLine))
+				{
+					writer.WriteLine(currLine);
+				}
+
+				currLine = reader.ReadLine();
+			}
+			reader.Close();
+			writer.Close();
+		}
+		finally
+		{
+			if (File.Exists(tempFileName))
+			{
+				File.Delete(tempFileName);
+			}
+		}
+	}
+
+	private static void PatchVC6ProjectFile(string fileName)
+    {
+      var tempFileName = Path.GetDirectoryName(fileName) + @"\old-scc-remove-" + Path.GetFileName(fileName);
+
+      try
+      {
+        File.Move(fileName, tempFileName);
+        RemoveReadOnlyOnFile(tempFileName);
+
+		// create a new .dsp file stripping away scc-related info
+		// DO NOT use File.Open for it may not open the file with the correct
+		// encoding.
+		var reader = new StreamReader(tempFileName, Encoding.Default);
+		var writer = new StreamWriter(fileName, false, Encoding.Default);
+		var currLine = reader.ReadLine();
+		while (currLine != null)
+		{
+			if (!currLine.Contains("# PROP Scc_")){
+				writer.WriteLine(currLine);
+			}
+
+			currLine = reader.ReadLine();
+		}
+		reader.Close();
+		writer.Close();
+	  }
+      finally
+      {
+        if (File.Exists(tempFileName))
+        {
+          File.Delete(tempFileName);
+        }
+      }
+    }
+
+   private static void PatchVC6SolutionFile(string fileName)
+    {
+      var tempFileName = Path.GetDirectoryName(fileName) + @"\old-scc-remove-" + Path.GetFileName(fileName);
+
+      try
+      {
+        File.Move(fileName, tempFileName);
+        RemoveReadOnlyOnFile(tempFileName);
+
+        // create a new .dsw file with every non scc-related 
+        // info from the old .dsw
+        // DO NOT use File.Open for it may not open the file with the correct
+        // encoding.
+        var reader = new StreamReader(tempFileName, Encoding.Default);
+        var writer = new StreamWriter(fileName, false, Encoding.Default);
+        var inSectionSCC = false;
+        var currLine = reader.ReadLine();
+        while (currLine != null)
+        {
+			if (currLine.Trim() == "begin source code control")
+          {
+            inSectionSCC = true;
+          }
+          else
+          {
+            if (!inSectionSCC)
+            {
+              writer.WriteLine(currLine);
+            }
+            else
+            {
+				if (currLine.Trim() == "end source code control")
+              {
+                inSectionSCC = false;
+              }
+            }
+          }
+
+          currLine = reader.ReadLine();
+        }
+        reader.Close();
+        writer.Close();
+      }
+      finally
+      {
+        if (File.Exists(tempFileName))
+        {
+          File.Delete(tempFileName);
+        }
+      }
     }
 
   #endregion  Private Class Methods  
