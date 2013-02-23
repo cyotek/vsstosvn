@@ -12,7 +12,7 @@ namespace Cyotek.SourceSafeSvnMigration
       CommandLineParser commandLine;
 
       // example command line
-      //    /vssdb=C:\SourceSafe\ImportTest1 /vssproject=$/ /svnrepo=https://JUPITER/svn/cyoteklegacy/ /svnfolder=C:\Repositories\cyoteklegacy /temppath=C:\temp\_migrate
+      //    /vssdb=C:\SourceSafe\cyotek /vssproject=$/ /svnrepo=https://HADES:8443/svn/test2/trunk/ /temppath=C:\temp\_migrate
 
       commandLine = new CommandLineParser();
       if (commandLine.AsBoolean("help") || commandLine.AsBoolean("h") || commandLine.AsBoolean("?"))
@@ -30,10 +30,9 @@ namespace Cyotek.SourceSafeSvnMigration
         Console.WriteLine("svnfolder\tSubversion repository local folder");
         Console.WriteLine("svnproject\tRoot project to import into");
         Console.WriteLine("vssproject\tSourceSafe project to import. May be specified multiple times.");
-        Console.WriteLine("subfolders\tSpecifies if the sub projects of vssproject arguments are");
-        Console.WriteLine("\t\tautomatically included in the import.");
+		Console.WriteLine("\t\tautomatically included in the import.");
+		Console.WriteLine("nosub\tPut VSS project contents directly under root.");
         Console.WriteLine("revprops\tSpecifies if Subversion revision properties should be modified");
-        Console.WriteLine("removebindings\tSpecifies if SourceSafe bindings should be removed");
         Console.WriteLine("preview\t\tPreviews actions without performing an actual migration");
         Console.WriteLine("temppath\tFolder where the working copy is created");
       }

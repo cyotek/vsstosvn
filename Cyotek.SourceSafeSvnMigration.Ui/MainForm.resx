@@ -117,11 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="label3.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>False</value>
-  </metadata>
   <metadata name="label2.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
+  </metadata>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>629, 24</value>
   </metadata>
   <metadata name="label1.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -139,11 +139,27 @@
     <value>125, 17</value>
   </metadata>
   <metadata name="saveSettingsFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>265, 17</value>
+    <value>275, 31</value>
   </metadata>
   <metadata name="svnFolderBrowserDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>438, 17</value>
   </metadata>
+  <data name="labelHookNote.ToolTip" xml:space="preserve">
+    <value>Make sure to have 'pre-revprop-change' hook enabled on current
+SVN repository for migration to work. Updating of revision
+properties (date, author) will not work otherwise.
+
+On Windows SVN server a simple pre-revprop-change.bat 
+file with \"exit /b 0\" in it will do.</value>
+  </data>
+  <data name="labelHookNote2.ToolTip" xml:space="preserve">
+    <value>Make sure to have 'pre-revprop-change' hook enabled on current
+SVN repository for migration to work. Updating of revision
+properties (date, author) will not work otherwise.
+
+On Windows SVN server a simple pre-revprop-change.bat 
+file with \"exit /b 0\" in it will do.</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="svnGroupBox.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -168,6 +184,12 @@
         H/CiUfK+VwhqRc42tG8kzw0XEjK0V6quFWk8lf5xPJ+9b8UhkeZueIFRMv/8/6L/AGjfAbNoaGtHz608
         AAAAAElFTkSuQmCC
 </value>
+  </data>
+  <data name="checkBoxNewName.ToolTip" xml:space="preserve">
+    <value>For single VSS project the subfolder with project's name will not be created.
+All the contents will be placed in SVN Root Project folder directly.
+
+If not checked VSS project name will be a subfolder under SVN Root Project</value>
   </data>
   <data name="vssGroupBox.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
